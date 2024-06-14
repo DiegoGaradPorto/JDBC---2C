@@ -66,9 +66,19 @@ public class CompraBilleteTren {
 
 		Tests tests = new Tests();
 
+		LOGGER.info("");
+
+		LOGGER.info(""); //Varios saltos de linea para diferenciar entre los mensajes de los procesos de compra y anulacion
+
+		LOGGER.info("");
+
 		LOGGER.info("Comienzan los test de COMPRAR BILLETES");
 
 		tests.ejecutarTestsCompraBilletes();
+
+		
+
+		//
 
 
 
@@ -90,9 +100,35 @@ public class CompraBilleteTren {
 
 		tests.ejecutarTestsAnularBilletes();
 
+		
 
+		//
+
+		
+
+		// Crear las tablas y filas en base de datos para la prueba
+
+		ExecuteScript.run("sql/CompraBilleteTren.sql");
+
+		
+
+		//Ejecutar test de modificacion
+
+		LOGGER.info("");
+
+		LOGGER.info(""); //Varios saltos de linea para diferenciar entre los mensajes de los procesos de compra y anulacion
+
+		LOGGER.info("");
+
+		LOGGER.info("Comienzan los test de MODIFICAR BILLETES");
+
+		tests.ejecutarTestsModificarBilletes();
+
+		
 
 		LOGGER.info("Fin de los tests");
+
+		
 
 	}
 
