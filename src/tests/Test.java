@@ -366,6 +366,8 @@ public class Tests {
 
 	    	// Caso 1: Modificar billete con éxito
 
+	    	LOGGER.info("TEST MODIFICAR BILLETE CON ÉXITO");
+
 	        int billeteId = 1; // ID del billete a modificar
 
 	        int nuevoNroPlazas = 2; // Nuevo número de plazas
@@ -426,6 +428,8 @@ public class Tests {
 
 	        // Caso 2: Intentar modificar un billete que no existe
 
+	        LOGGER.info("TEST MODIFICAR BILLETE INEXISTENTE");
+
 	        int billeteInexistenteId = 9999; // ID de un billete que no existe
 
 	        int nuevoNroPlazasCaso2 = 2;
@@ -445,6 +449,8 @@ public class Tests {
 
 
 	        // Caso 3: Intentar modificar un billete con un nuevo número de plazas negativo
+
+	        LOGGER.info("TEST MODIFICAR BILLETE CON NºPLAZAS NEGATIVO");
 
 	        int billeteIdCaso3 = 2; // ID de un billete válido
 
@@ -466,7 +472,9 @@ public class Tests {
 
 	        // Caso 4: Intentar modificar un billete con un nuevo número de plazas que excede el límite
 
-	        int billeteIdCaso4 = 3; // ID de un billete válido
+	        LOGGER.info("TEST MODIFICAR BILLETE CON NºPLAZAS QUE EXCEDE EL LÍMITE");
+
+	        int billeteIdCaso4 = 2; // ID de un billete válido
 
 	        int nuevoNroPlazasExcedente = 100;
 
@@ -493,5 +501,4 @@ public class Tests {
 	}
 
 }
-
 
