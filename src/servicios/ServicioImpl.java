@@ -96,11 +96,11 @@ public class ServicioImpl implements Servicio {
 
 			
 
-			
+			//Obtenemos el valor de las plazas que se van a liberar / anular
 
 			int idViaje = rs.getInt("idViaje");
 
-			int plazasLiberadas = rs.getInt("cantidad"); // Se obtienen las plazas a liberar aquí
+			int plazasLiberadas = rs.getInt("cantidad");
 
 			
 
@@ -246,6 +246,8 @@ public class ServicioImpl implements Servicio {
 
 		
 
+		//Comenzamos una transaccion
+
 		try {
 
 
@@ -340,9 +342,11 @@ public class ServicioImpl implements Servicio {
 
 			}
 
+			
 
 
-			// Restamos las plazas compradas
+
+			// Actualizamos las plazas disponibles para ese viaje
 
 			st = con.prepareStatement("update viajes set nPlazasLibres = nPlazasLibres - ? where idViaje= ?");
 
@@ -356,17 +360,17 @@ public class ServicioImpl implements Servicio {
 
 			
 
-			// Obtenemos el valor del precio para calcular
+			// Obtenemos el precio para dicho viaje
 
 			st = con.prepareStatement(
 
 					"SELECT r.precio " +
 
-							"FROM recorridos r " +
+					"FROM recorridos r " +
 
-							"INNER JOIN viajes v ON r.idRecorrido = v.idRecorrido " +
+					"INNER JOIN viajes v ON r.idRecorrido = v.idRecorrido " +
 
-							"WHERE v.idViaje = ?");
+					"WHERE v.idViaje = ?");
 
 
 
@@ -392,17 +396,19 @@ public class ServicioImpl implements Servicio {
 
 			// Calculamos el precio total del viaje
 
-			precioRecorrido = rs.getInt("precio"); // Obtener el precio del recorrido
+			precioRecorrido = rs.getInt("precio"); // Obtenemos el precio del recorrido
 
 
 
-			int precioTotal = nroPlazas * precioRecorrido; // Calcular el precio total
+			int precioTotal = nroPlazas * precioRecorrido; // Calculamos el precio total
 
 			int valido = 0;
 
+			
+
+			
+
 			// Insertamos la fila en la tabla de tickets
-
-
 
 			st = con.prepareStatement(
 
@@ -418,11 +424,13 @@ public class ServicioImpl implements Servicio {
 
 			st.setInt(3, nroPlazas);
 
-			st.setInt(4, precioTotal); // Multiplicar el precio por el número de plazas
+			st.setInt(4, precioTotal);
 
 			st.executeUpdate();
 
 		
+
+			//Comiteamos la transacción
 
 			con.commit();
 
@@ -462,8 +470,6 @@ public class ServicioImpl implements Servicio {
 
 		} finally {
 
-
-
 			// Cerrar recursos
 
 			if (rs != null) {
@@ -490,6 +496,8 @@ public class ServicioImpl implements Servicio {
 
 	
 
+	//Metodo modificar billete
+
 	@Override
 
 	public void modificarBillete(int billeteId, int nuevoNroPlazas) 
@@ -498,12 +506,227 @@ public class ServicioImpl implements Servicio {
 
 		
 
+		PoolDeConexiones pool = PoolDeConexiones.getInstance();
+
+
+
+		Connection con = null;
+
+		PreparedStatement st = null;
+
+		ResultSet rs = null;
+
+		
+
+		//Comenzamos una transaccion
+
+		try {
+
+			
+
+			con = pool.getConnection();
+
+			
+
+			//Desactivamos el Autocommit
+
+			con.setAutoCommit(false);
+
+			
+
+			
+
+			//Verificamos si existe el billete que se desea modificar
+
+			st = con.prepareStatement(
+
+					"SELECT t.idTicket, t.cantidad, t.precio " 
+
+					+ "FROM tickets t "
+
+					+ "WHERE t.idTicket = ?");
+
+			
+
+			st.setInt(1, billeteId);
+
+			rs = st.executeQuery();
+
+			
+
+			if (!rs.next()) {
+
+				// No se encontró el billete
+
+				throw new SQLException("No existe el billete que se desea modificar.");
+
+			}
+
+			
+
+			//Verificamos que el numero de plazas que se desea modificar es positivo
+
+			if (nuevoNroPlazas < 0) {
+
+				throw new SQLException("El numero de plazas que se desea modificar es negativo");
+
+			}
+
+			
+
+			//Verificamos que el número de plazas que se desea modificar no exceda el número de plazas disponibles en ese viaje
+
+			//Primero obtenemos el número de plazas disponibles para ese viaje
+
+			st = con.prepareStatement(
+
+					"SELECT v.nPlazasLibres "
+
+					+ "FROM viajes v "
+
+					+ "JOIN tickets t ON v.idViaje = t.idViaje "
+
+					+ "WHERE idTicket = ? ");
+
+			st.setInt(1,billeteId);
+
+			rs = st.executeQuery();
+
+			
+
+			if(!rs.next()) {
+
+				throw new SQLException("No se pudo obtener el número de plazas del viaje correspondiente a ese billete");
+
+			}
+
+			
+
+			//Guardamos el valor del numero de plazas disponibles en una variable para trabajar con ella
+
+			int plazasDisponibles = rs.getInt("nPlazasLibres");
+
+			
+
+			//Hacemos la verificacion de que la modificación no excede el numero de plazas libres
+
+			if(nuevoNroPlazas > plazasDisponibles) {
+
+				throw new SQLException("El numero de plazas que se desea modificar supera el límite de las plazas disponibles.");
+
+			}
+
+			
+
+			//Obtenemos el valor del precio para una plaza de dicho viaje
+
+			st = con.prepareStatement(
+
+					"SELECT r.precio "
+
+					+ "FROM tickets t "
+
+					+ "JOIN viajes v ON t.idViaje = v.idViaje "
+
+					+ "JOIN recorridos r ON v.idRecorrido = r.idRecorrido "
+
+					+ "WHERE t.idTicket = ?");
+
+			st.setInt(1, billeteId);
+
+			rs = st.executeQuery();
+
+			
+
+			if(!rs.next()) {
+
+				throw new SQLException("No se pudo obtener el precio para una plaza de dicho viaje");
+
+			}
+
+			
+
+			//Guardamos el valor del precio en una variable que vamos a usar a continuación
+
+			int precioPorPlaza = rs.getInt("precio");
+
+			
+
+			//Calculamos el valor total del billete modificado
+
+			int precioTotal = precioPorPlaza * nuevoNroPlazas;
+
+			
+
+			
+
+			//Modificamos el billete, cambiando su cantidad y su precio total
+
+			st = con.prepareStatement(
+
+					"UPDATE tickets SET cantidad = ?, precio = ? "
+
+					+ "WHERE idTicket = ?");
+
+			st.setInt(1 ,nuevoNroPlazas);
+
+			st.setInt(2, precioTotal);
+
+			st.setInt(3, billeteId);
+
+			st.executeUpdate();
+
+			
+
+			//Comiteamos la transaccion
+
+			con.commit();
+
+			
+
+		}catch (SQLException e){
+
+			LOGGER.error("Error al modificar el billete: " + e.getMessage());
+
+			if (con != null) {
+
+				con.rollback(); // Realizamos el rollback de la transacción
+
+			}
+
+			throw e;
+
+			
+
+		}finally {
+
+		
+
+			// Cerrar recursos
+
+			if (rs != null) {
+
+				rs.close();
+
+			}
+
+			if (st != null) {
+
+				st.close();
+
+			}
+
+			if (con != null) {
+
+				con.close();
+
+			}
+
+		}
+
+		
+
 	}
 
-	
-
-
-
 }
-
 
