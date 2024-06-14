@@ -116,9 +116,11 @@ public class ServicioImpl implements Servicio {
 
 
 
+			//Si el viaje ya se ha realizado se considera que no existe ese billetes de viajes pendientes que poder anular
+
 			if (!rs.next() || rs.getInt("realizado") == 1) 
 
-				throw new CompraBilleteTrenException(2);
+				throw new CompraBilleteTrenException(CompraBilleteTrenException.NO_EXISTE_VIAJE);
 
 			
 
@@ -185,6 +187,8 @@ public class ServicioImpl implements Servicio {
 			throw e;
 
 			
+
+		//Liberamos los recursos utilizados	
 
 		}finally {
 
@@ -296,6 +300,8 @@ public class ServicioImpl implements Servicio {
 
 
 
+			//Guardamos el valor del idViaje en una variable para poder trabajar con ella posteriormente
+
 			int idViaje = rs.getInt("idViaje");
 
 
@@ -314,11 +320,7 @@ public class ServicioImpl implements Servicio {
 
 							"LEFT JOIN tickets t ON v.idViaje = t.idViaje " +
 
-
-
 							"WHERE v.idViaje = ? " +
-
-
 
 							"GROUP BY m.nPlazas");
 
@@ -330,11 +332,11 @@ public class ServicioImpl implements Servicio {
 
 
 
+			//Si el número de plazas disponibles es menor al número de plazas que se quieren comprar salta la excepción
+
 			if (!rs.next() || rs.getInt("plazas_disponibles") < nroPlazas) {
 
-
-
-				// No hay plazas disponibles
+				// No hay plazas suficientes
 
 				throw new CompraBilleteTrenException(CompraBilleteTrenException.NO_PLAZAS);
 
@@ -342,19 +344,15 @@ public class ServicioImpl implements Servicio {
 
 			}
 
-			
-
 
 
 			// Actualizamos las plazas disponibles para ese viaje
 
-			st = con.prepareStatement("update viajes set nPlazasLibres = nPlazasLibres - ? where idViaje= ?");
+			st = con.prepareStatement("UPDATE viajes SET nPlazasLibres = nPlazasLibres - ? WHERE idViaje= ?");
 
 			st.setInt(1,nroPlazas);
 
 			st.setInt(2,idViaje);
-
-			
 
 			st.executeUpdate();
 
@@ -372,19 +370,15 @@ public class ServicioImpl implements Servicio {
 
 					"WHERE v.idViaje = ?");
 
-
-
 			st.setInt(1, idViaje);
-
-
 
 			rs = st.executeQuery();
 
 
 
+			//Guardamos el valor del precio del recorrido en una variable
+
 			int precioRecorrido = 0;
-
-
 
 			if (rs.next()) {
 
@@ -400,7 +394,9 @@ public class ServicioImpl implements Servicio {
 
 
 
-			int precioTotal = nroPlazas * precioRecorrido; // Calculamos el precio total
+			// Calculamos el precio total
+
+			int precioTotal = nroPlazas * precioRecorrido; 
 
 			int valido = 0;
 
@@ -468,9 +464,9 @@ public class ServicioImpl implements Servicio {
 
 
 
-		} finally {
+		//Cerramos los recursos utilizados
 
-			// Cerrar recursos
+		} finally {
 
 			if (rs != null) {
 
@@ -545,8 +541,6 @@ public class ServicioImpl implements Servicio {
 					+ "FROM tickets t "
 
 					+ "WHERE t.idTicket = ?");
-
-			
 
 			st.setInt(1, billeteId);
 
@@ -696,13 +690,11 @@ public class ServicioImpl implements Servicio {
 
 			throw e;
 
-			
-
-		}finally {
-
 		
 
-			// Cerrar recursos
+		//Cerramos los recursos utilizados
+
+		}finally {
 
 			if (rs != null) {
 
