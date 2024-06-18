@@ -46,6 +46,16 @@ public class CompraBilleteTrenException extends SQLException {
 
 	public static final int NO_EXISTE_VIAJE = 2;
 
+	
+
+	//Definición de excepciones personalizadas para el método "modificarBillete"
+
+	public static final int NO_EXIXTE_BILLETE = 3;
+
+	public static final int PLAZAS_NEGATIVAS = 4;
+
+	public static final int PLAZAS_SUPERAN_LIMITE = 5;
+
 
 
 	private int codigo; // = -1;
@@ -64,7 +74,9 @@ public class CompraBilleteTrenException extends SQLException {
 
 		this.codigo = code;
 
-				
+		
+
+		//Ceamos un switch-case para cada una de las excepciones
 
 		switch(this.codigo) {
 
@@ -77,6 +89,24 @@ public class CompraBilleteTrenException extends SQLException {
 		case NO_EXISTE_VIAJE:
 
 			this.mensaje = "No existe ese viaje para esa fecha, hora, origen, destino.";
+
+			break;
+
+		case NO_EXIXTE_BILLETE:
+
+			this.mensaje = "No existe el billete que se desea modificar.";
+
+			break;
+
+		case PLAZAS_NEGATIVAS:
+
+			this.mensaje = "El número de plazas que se desea modificar es negativo.";
+
+			break;
+
+		case PLAZAS_SUPERAN_LIMITE: 
+
+			this.mensaje = "El número de plazas que se desea modificar super el límite.";
 
 			break;
 
@@ -119,5 +149,4 @@ public class CompraBilleteTrenException extends SQLException {
 	}
 
 }
-
 
