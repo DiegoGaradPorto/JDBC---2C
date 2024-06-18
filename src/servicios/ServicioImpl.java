@@ -552,7 +552,7 @@ public class ServicioImpl implements Servicio {
 
 				// No se encontró el billete
 
-				throw new SQLException("No existe el billete que se desea modificar.");
+				throw new CompraBilleteTrenException(CompraBilleteTrenException.NO_EXIXTE_BILLETE);
 
 			}
 
@@ -562,7 +562,7 @@ public class ServicioImpl implements Servicio {
 
 			if (nuevoNroPlazas < 0) {
 
-				throw new SQLException("El numero de plazas que se desea modificar es negativo");
+				throw new CompraBilleteTrenException(CompraBilleteTrenException.PLAZAS_NEGATIVAS);
 
 			}
 
@@ -606,7 +606,7 @@ public class ServicioImpl implements Servicio {
 
 			if(nuevoNroPlazas > plazasDisponibles) {
 
-				throw new SQLException("El numero de plazas que se desea modificar supera el límite de las plazas disponibles.");
+				throw new CompraBilleteTrenException(CompraBilleteTrenException.PLAZAS_SUPERAN_LIMITE);
 
 			}
 
@@ -678,7 +678,25 @@ public class ServicioImpl implements Servicio {
 
 			
 
+		}catch (CompraBilleteTrenException e) {
+
+			
+
+			LOGGER.error("Error al modificar el billete: " + e.getMessage());
+
+			if (con != null) {
+
+				con.rollback(); // Realizamos el rollback de la transacción
+
+			}	
+
+			throw e;
+
+			
+
 		}catch (SQLException e){
+
+		
 
 			LOGGER.error("Error al modificar el billete: " + e.getMessage());
 
